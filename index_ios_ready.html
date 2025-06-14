@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#4F46E5">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>부석고 친밀 도감</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Pretendard', sans-serif;
+      background: #f9f9fb;
+      color: #222;
+      padding: 1rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .controls input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      flex: 1;
+      min-width: 150px;
+    }
+    .controls button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      background-color: #4F46E5;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .section {
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: #333;
+      border-left: 4px solid #4F46E5;
+      padding-left: 0.5rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+    .card {
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 0.5rem;
+      background-color: white;
+      text-align: center;
+      position: relative;
+    }
+    .card input[type='checkbox'] {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      transform: scale(1.3);
+      display: none;
+    }
+    .card-name {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <h1>📖 부석고 친밀 도감</h1>
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="이름 검색..." />
+    <button onclick="addEntry()">도감 추가</button>
+    <button onclick="confirmDelete()">선택 삭제</button>
+  </div>
+  <div id="docContainer"></div>
+
+  <script>
+    let entries = {
+      "5": ['지은', '예원', '인지', '건이', '준서', '기태', '연주', '민성'],
+      "4": ['오해승', '강민찬', '김유진', '안재성', '안태현', '최진호', '김서아', '이초윤', '공준호'],
+      "3": ['이유찬', '이채혁', '조효재', '안현준', '도준영', '김가현(코)', '김관현', '채준혁',
+            '박소연(1반)', '노석현', '이용훈', '지승연'],
+      "2.5": ['박건영', '김연아', '최지인', '한진규', '박창무', '권순호', '최서하', '유보현', '김연수', '전승민'],
+      "2": ['최은빈', '서지원', '이현준', '김나경', '유아란', '가명인', '김정훈', '김예지', '황재원',
+            '강민규', '한유찬', '송명준', '김성호', '안준혁', '현석', '김민경', '이정현', '정태진',
+            '강호길', '이지호', '이령혜', '심주영', '이광형', '박소연(2)', '최지희', '박강두'],
+      "1": ['윤지함', '안현주', '이준', '김경진', '염정화', '하도연', '이채리', '유승민', '신우영',
+            '기드보라', '이민준', '양도균', '정예지', '권의선', '경태희', '최원복', '김가현(눈)'],
+      "0": ['도가람', '강수아', '황민규', '한은찬', '김건우', '홍성채', '가도호', '김도영', '백종찬',
+            '박수연', '한예진', '정시후', '오민석', '윤시원', '강다영', '연승준', '강예린', '윤서연'],
+      "-1": ['김태인', '이한희', '문윤모', '홍성규', '신이랑', '성윤서', '정승찬', '이희석', '김규민',
+             '김가현(2)', '임현수', '이차빈', '이민주', '유하민'],
+      "-2": ['이현서', '김설휘', '함현준', '장수빈']
+    };
+
+    let selecting = false;
+    const docContainer = document.getElementById('docContainer');
+    const searchInput = document.getElementById('searchInput');
+
+    function render(filter = '') {
+      docContainer.innerHTML = '';
+      const levels = Object.keys(entries).sort((a, b) => b - a);
+      for (const level of levels) {
+        const names = entries[level].filter(name => name.includes(filter));
+        if (names.length === 0) continue;
+
+        const section = document.createElement('div');
+        section.className = 'section';
+
+        const title = document.createElement('div');
+        title.className = 'section-title';
+        title.textContent = `친밀도 ${level}`;
+        section.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+
+        for (const name of names) {
+          const card = document.createElement('div');
+          card.className = 'card';
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = name;
+          checkbox.style.display = selecting ? 'block' : 'none';
+
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'card-name';
+          nameDiv.textContent = name;
+
+          card.appendChild(checkbox);
+          card.appendChild(nameDiv);
+          grid.appendChild(card);
+        }
+
+        section.appendChild(grid);
+        docContainer.appendChild(section);
+      }
+    }
+
+    function addEntry() {
+      const name = prompt('이름을 입력하세요:');
+      const level = prompt('친밀도를 입력하세요 (예: 3):');
+      if (!name || isNaN(level)) return alert('이름과 숫자 형식의 친밀도가 필요합니다.');
+      if (!entries[level]) entries[level] = [];
+      entries[level].push(name);
+      render(searchInput.value);
+    }
+
+    function confirmDelete() {
+      selecting = !selecting;
+      render(searchInput.value);
+      if (!selecting) {
+        const selected = Array.from(document.querySelectorAll('.card input:checked')).map(cb => cb.value);
+        if (selected.length === 0) return;
+        const ok = confirm(`${selected.length}명을 정말 삭제하시겠습니까?`);
+        if (!ok) return;
+        deleteEntries(selected);
+      }
+    }
+
+    function deleteEntries(namesToDelete) {
+      for (const level in entries) {
+        entries[level] = entries[level].filter(name => !namesToDelete.includes(name));
+        if (entries[level].length === 0) delete entries[level];
+      }
+      render(searchInput.value);
+    }
+
+    searchInput.addEventListener('input', () => render(searchInput.value));
+    render();
+  </script>
+</body>
+</html>
